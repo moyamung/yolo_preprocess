@@ -39,5 +39,7 @@ class Yolo_preprocess
       void ImageDetectionCallback(const sensor_msgs::ImageConstPtr& msg);
       void YoloDetectionCallBack(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg);
 
+      void SendImage(int target_class, cv::Mat image);
+
       const float CalculateConfidence(int x_size, int y_size, float probability);
 };

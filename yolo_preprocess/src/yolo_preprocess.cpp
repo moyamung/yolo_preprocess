@@ -16,7 +16,17 @@ Yolo_preprocess::Yolo_preprocess()
 
 Yolo_preprocess::~Yolo_preprocess()
 {
+    ros::Rate loop_rate(10);
+
     ROS_INFO("save others");
+    for (int i = 0; i < 10; i++)
+    {
+        if (confidence[i] < 0.001)
+            continue;
+        ROS_INFO("sending %d", i);
+        SendImage(i, best_Images[i]);
+        loop_rate.sleep();
+    }
     ros::shutdown();
 }
 
@@ -66,6 +76,7 @@ void Yolo_preprocess::YoloDetectionCallBack(const darknet_ros_msgs::BoundingBoxe
     if (now_conf > confidence[target_class])
     {
         confidence[target_class] = now_conf;
+        best_Images[target_class] = cropped_image;
         std::stringstream filename;
         filename << "/home/whjeong/yolo_crop/" << target_class_id << ".jpg";
                 
@@ -73,22 +84,29 @@ void Yolo_preprocess::YoloDetectionCallBack(const darknet_ros_msgs::BoundingBoxe
 
         cv::imwrite(filename.str(), cropped_image);
 
-        if (now_conf > 0.07)
+        if (now_conf > 0.06)
         {
-            final_result_msgs::save_image send_msg;
-            sensor_msgs::ImagePtr img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", cropped_image).toImageMsg();
-            send_msg.class_id = target_class;
-            send_msg.save_img = *img_msg;
-            send_msg.x_pose = 0;
-            send_msg.y_pose = 0;
-            
-            final_result_pub.publish(send_msg);
+            SendImage(target_class, cropped_image);
         }
     }
 }
 
+void Yolo_preproocess::SendImage(int target_class, cv::Mat image)
+{
+    final_result_msgs::save_image send_msg;
+    sensor_msgs::ImagePtr img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", cropped_image).toImageMsg();
+    send_msg.class_id = target_class;
+    send_msg.save_img = *img_msg;
+    send_msg.x_pose = 0;
+    send_msg.y_pose = 0;
+    
+    final_result_pub.publish(send_msg);
+}
+
 const float Yolo_preprocess::CalculateConfidence(int x_size, int y_size, float probability)
 {
+    if (probability < 0.65)
+        return 0;
     float x_prop = (float)x_size / 640.0;
     float y_prop = (float)y_size / 480.0;
     return x_prop * y_prop * probability * probability;
