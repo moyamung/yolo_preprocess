@@ -91,10 +91,10 @@ void Yolo_preprocess::YoloDetectionCallBack(const darknet_ros_msgs::BoundingBoxe
     }
 }
 
-void Yolo_preproocess::SendImage(int target_class, cv::Mat image)
+void Yolo_preprocess::SendImage(int target_class, cv::Mat image)
 {
     final_result_msgs::save_image send_msg;
-    sensor_msgs::ImagePtr img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", cropped_image).toImageMsg();
+    sensor_msgs::ImagePtr img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
     send_msg.class_id = target_class;
     send_msg.save_img = *img_msg;
     send_msg.x_pose = 0;
