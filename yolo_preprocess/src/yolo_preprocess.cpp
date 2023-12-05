@@ -64,6 +64,14 @@ void Yolo_preprocess::YoloDetectionCallBack(const darknet_ros_msgs::BoundingBoxe
     int ymin = msg->bounding_boxes[0].ymin;
     int xmax = msg->bounding_boxes[0].xmax;
     int ymax = msg->bounding_boxes[0].ymax;
+
+    if (xmax - xmin < 75)
+    {
+        int xmid = (xmin + xmax) / 2;
+        xmax = xmid + 38 < 639 ? xmid + 38 : 639;
+        xmin = xmid - 38 > 0 ? xmid - 38 : 0;
+    }
+
     cv::Mat cropped_image = now_Image.clone()(cv::Range(ymin, ymax), cv::Range(xmin,xmax));
     float now_conf = CalculateConfidence(xmax - xmin, ymax - ymin, msg->bounding_boxes[0].probability);
 
